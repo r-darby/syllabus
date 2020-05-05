@@ -4,11 +4,15 @@
 
 **What will we learn today?**
 
-- [Recap](#recap)
-- [Unmounting](#unmounting)
-- [The Circle of Life](#the-circle-of-life)
-- [Fetching Data in React](#fetching-data-in-react)
-- [Working with forms in React](#working-with-forms-in-react)
+- [React 3](#react-3)
+  - [Recap](#recap)
+  - [Unmounting](#unmounting)
+  - [The Circle of Life](#the-circle-of-life)
+    - [`componentDidMount` and `componentWillUnmount`](#componentdidmount-and-componentwillunmount)
+  - [Fetching Data in React](#fetching-data-in-react)
+  - [Working with forms in React](#working-with-forms-in-react)
+  - [Further Reading](#further-reading)
+- [Homework](#homework)
 
 ## Recap
 
@@ -42,41 +46,57 @@ class Counter extends Component {
 
 ## Unmounting
 
-So far we've looked at components that are always rendered in the browser. However (and this is often the case in large applications), we might want to control whether components are shown or not. Let's look at a Toggle component ([interactive example](https://codesandbox.io/s/xmo8oo514)):
+So far we've looked at components that are always rendered in the browser. However (and this is often the case in large applications), we might want to control whether components are shown or not. 
+Let's look at a Toggle component ([interactive example](https://codesandbox.io/s/xmo8oo514)):
 
 ```js
-const Message = () => (
-  <p>I'm shown when this.state.isShown is true ✅</p>
-);
+const Message = () => {
+  <p>I'm mounted when isShown is true ✅</p>
+}
 
-class Toggle extends Component {
-  constructor(props) {
-    super(props);
-    this.state = { isShown: false };
-  }
+const Toggle = () => {
+  const [isShown, setIsShown] = useState(false);
 
-  toggle = () => {
-    this.setState((previousState) => { 
-    	return { isShown: !previousState.isShown } 
-	 });
+  toggleMessage = () => {
+    setIsShown(!isShown);
   };
 
-  render() {
-    return (
-      <div>
-        {this.state.isShown ? <Message /> : null}
-        <button onClick={this.toggle}>Toggle</button>
-      </div>
-    );
-  }
-}
+  return (
+    <div>
+      <button onClick={toggleMessage}>Toggle</button>
+      {isShown ? <Message /> : null}
+    </div>
+  );
+};
 ```
 
-If you open up dev tools, you will see that the element changes based on the `isShown` state. The hidden element is not hidden with CSS, it is actually removed from the DOM. This is because `this.state.isShown` is `false` which means the Toggle component returns `null` for that part of the JSX. If you return `null` in JSX then React will render nothing at all.
+If you open up dev tools, you will see that the element changes based on the `isShown` state. The hidden element is not hidden with CSS, it is actually removed from the DOM. This is because `isShown` is `false` which means the Toggle component returns `null` for that part of the JSX. If you return `null` in JSX then React will render nothing at all.
 
 ## The Circle of Life
 
-When a component is within the DOM, we call it *mounted*. When a component is removed from the DOM, we call it *unmounted*. When we change state like in the unmounting example above, we can switch between these statuses. This gives us a clue that components go through a *lifecycle* of different statuses. We have seen 2 of the statuses: mounting and unmounting, there is also a third called *updating*.
+When a component is within the DOM, we call it _mounted_. When a component is removed from the DOM, we call it _unmounted_. When we change state like in the unmounting example above, we can switch between these statuses. This gives us a clue that components go through a _lifecycle_ of different statuses. We have seen 2 of the statuses: mounting and unmounting, there is also a third called _updating_.
+
+_Updating_ occurs when something changes which affects the component. For example, if a prop has changed in a parent component, the value of that prop will in turn update the child component. If you want to do something specific with the new value, like run a function, recalculate something etc, then you'll need to listen for that prop change.
+
+The `useEffect` hook we learned last week allows us to hook into the 'lifecycle' of a component. Remember, we used it to fetch data when the component was first mounted.
+
+Now, we can use `useEffect` again to react to the component updating. The syntax for this is different:
+
+```js
+useEffect(() => {
+  // Define here what you want to happen when the prop below updates
+}, [nameOfThePropYouWantToListenTo]);
+```
+
+Compare this with the syntax we used for _mounting_:
+
+```js
+useEffect(() => {
+  // Define here what you want to happen when the component mounts
+}, []); // nothing inside the square brackets!
+```
+
+<!--  TODO: I presume we're removing the below -->
 
 We can hook into this lifecycle through special component methods that are added by React's `Component` class. They are run at different points of the lifecycle, often before and after they change to a different status. The method names contain `will` or `did` based on whether they run before or after a status change.
 
